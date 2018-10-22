@@ -1,0 +1,303 @@
+type User {
+  id: ID!
+  email: String!
+  primaryEmailId: String!
+  createdAt: String!
+  updatedAt: String!
+  deletedAt: String
+  username: String!
+  name: String
+  releaseChannel: String
+  avatarUrl: String
+}
+
+type Organization {
+  id: ID!
+  name: String!
+}
+
+type Project {
+  id: ID!
+  name: String!
+}
+
+type Annotation {
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+}
+
+input AnnotationInput {
+  x: Int!
+  y: Int!
+  width: Int!
+  height: Int!
+}
+
+type Comment {
+  id: ID!
+  body: String!
+  annotation: Annotation
+}
+
+input CommentInput {
+  body: String!
+  annotation: AnnotationInput
+}
+
+type Collection {
+  id: ID!
+  user: User
+  project: Project
+  name: String!
+  description: String
+  createdAt: String!
+  publishedAt: String
+}
+
+type Commit {
+  sha: ID!
+}
+
+type Branch {
+  id: ID!
+  name: String!
+  description: String
+  userName: String
+  userId: String
+  createdAt: String!
+  updatedAt: String!
+  status: String
+  parent: String
+  startedAtSha: String
+  head: String!
+  mergeSha: String
+  mergedIntoBranchId: String
+  divergedFromBranchId: String
+  projectId: String!
+  user: User
+}
+
+type Changeset {
+  id: ID!
+}
+
+type Layer {
+  id: ID!
+  name: String!
+  type: String!
+  width: Int!
+  height: Int!
+  x: Int!
+  y: Int!
+  lastChangedAtSha: String!
+  projectId: String!
+  sha: String!
+  fileId: String!
+  pageId: String!
+  updatedAt: String!
+  order: Int!
+  libraryId: String!
+}
+
+type Page {
+  id: ID!
+  name: String!
+  projectId: String!
+  sha: String!
+  fileId: String!
+  type: String
+  order: Int!
+}
+
+enum SupportedFileType {
+  sketch
+}
+
+type File {
+  id: ID!
+  project: Project
+  pages: [Page]
+  name: String
+  type: SupportedFileType
+  applicationVersion: String
+  applicationDocumentVersion: String
+  isLibrary: Boolean
+  sha: String
+  lastChangedAtSha: String
+  updatedAt: String
+}
+
+type Library {
+  fileId: ID!
+  name: String
+  type: SupportedFileType
+  projectId: String
+  projectName: String
+  branchId: String
+  branchName: String
+}
+
+type LayerDataset {
+  projectId: String!
+  sha: String!
+  fileId: String!
+  layerId: String!
+}
+
+input CollectionDescriptor {
+  projectId: String!
+  branchId: String!
+  collectionId: String!
+}
+
+input BranchDescriptor {
+  projectId: String!
+  branchId: String!
+  sha: String
+}
+
+input CommitDescriptor {
+  projectId: String!
+  branchId: String!
+  sha: String!
+}
+
+input FileDescriptor {
+  projectId: String!
+  branchId: String!
+  fileId: String!
+  sha: String
+}
+
+input PageDescriptor {
+  projectId: String!
+  branchId: String!
+  fileId: String!
+  pageId: String!
+  sha: String
+}
+
+input LayerDescriptor {
+  projectId: String!
+  branchId: String!
+  fileId: String!
+  layerId: String!
+  sha: String
+}
+
+input DisjointedObjectDescriptor {
+  projectId: String!
+  branchId: String!
+  fileId: String
+  layerId: String
+  sha: String
+}
+
+type OrganizationsEndpoint {
+  list: [Organization]
+}
+
+type ProjectsEndpoint {
+  list: [Project]
+  info: Project
+}
+
+type CollectionResponseAPI {
+  collections: [Collection]
+  files: [File]
+  pages: [Page]
+  layers: [Layer]
+}
+
+type CollectionsEndpoint {
+  list(objectDescriptor: DisjointedObjectDescriptor): CollectionResponseAPI
+  info(objectDescriptor: CollectionDescriptor): CollectionResponseAPI
+}
+
+type CommentsEndpoint {
+  create(
+    objectDescriptor: DisjointedObjectDescriptor
+    input: CommentInput
+  ): Comment
+}
+
+type CommitsEndpoint {
+  list(objectDescriptor: DisjointedObjectDescriptor): [Commit]
+  info(objectDescriptor: DisjointedObjectDescriptor): Commit
+}
+
+type BranchResponseAPI {
+  branches: [Branch]
+  users: [User]
+}
+
+type BranchesEndpoint {
+  list(objectDescriptor: BranchDescriptor): BranchResponseAPI
+  info(objectDescriptor: BranchDescriptor): Branch
+}
+
+type ChangesetsEndpoint {
+  info(objectDescriptor: CommitDescriptor): Changeset
+}
+
+
+type FilesResponseAPI {
+  files: [File]
+  libraries: [Library]
+}
+
+type FilesEndpoint {
+  list(objectDescriptor: BranchDescriptor): FilesResponseAPI
+  info(objectDescriptor: FileDescriptor): FilesResponseAPI
+}
+
+type PagesEndpoint {
+  list(objectDescriptor: FileDescriptor): [Page]
+  info(objectDescriptor: PageDescriptor): Page
+}
+
+type LayersResponseAPI {
+  layer: Layer
+  file: File
+  page: Page
+}
+
+type LayerResponseAPI {
+  layers: Layer
+  file: File
+  page: Page
+}
+
+type LayersEndpoint {
+  list(objectDescriptor: FileDescriptor): LayersResponseAPI
+  info(objectDescriptor: LayerDescriptor): LayerResponseAPI
+}
+
+type PreviewsEndpoint {
+  url(objectDescriptor: LayerDescriptor): String
+  blob(objectDescriptor: LayerDescriptor): String
+}
+
+type DataEndpoint {
+  info(objectDescriptor: LayerDescriptor): LayerDataset
+}
+
+type Query {
+  organizations: OrganizationsEndpoint
+  projects: ProjectsEndpoint
+  collections: CollectionsEndpoint
+  commits: CommitsEndpoint
+  branches: BranchesEndpoint
+  changesets: ChangesetsEndpoint
+  files: FilesEndpoint
+  pages: PagesEndpoint
+  layers: LayersEndpoint
+  previews: PreviewsEndpoint
+  data: DataEndpoint
+}
+
+type Mutation {
+  comments: CommentsEndpoint
+}
