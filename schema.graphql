@@ -16,9 +16,29 @@ type Organization {
   name: String!
 }
 
+enum ProjectVisibility {
+  organization
+  project
+}
+
 type Project {
   id: ID!
   name: String!
+  about:  String
+  description: String
+  color: String
+  createdAt: String!
+  updatedAt: String!
+  organizationId: String!
+  createdByUser: User
+  deletedAt: String
+  archivedAt: String
+  firstPushedAt: String!
+  pushedAt: String
+  repoCreatedAt: String!
+  visibility: ProjectVisibility
+  sizeInBytes: Int
+  userIds: [String]
 }
 
 type Annotation {
@@ -56,8 +76,36 @@ type Collection {
   publishedAt: String
 }
 
+enum CommitType {
+  PROJECT_CREATED
+	FILE_ADDED
+	FILE_RENAMED
+	FILE_DELETED
+	FILE_REPLACED
+	FILE_UPGRADED
+	LIBRARY_ADDED
+	LIBRARY_REMOVED
+	RESTORE
+	UPDATE
+	MERGE
+	NORMAL
+}
+
 type Commit {
   sha: ID!
+  time: String!
+  title: String!
+  description: String
+  destinationBranchId: String
+  destinationBranchName: String
+  fileIds: [String]
+  parents: [String]
+  projectId: String!
+  sourceBranchId: String
+  sourceBranchName: String
+  type: CommitType
+  userId: String
+  userName: String
 }
 
 type Branch {
@@ -146,142 +194,93 @@ type LayerDataset {
   layerId: String!
 }
 
-input CollectionDescriptor {
-  projectId: String!
-  branchId: String!
-  collectionId: String!
-}
-
-input BranchDescriptor {
-  projectId: String!
-  branchId: String!
-  sha: String
-}
-
-input CommitDescriptor {
-  projectId: String!
-  branchId: String!
-  sha: String!
-}
-
-input FileDescriptor {
-  projectId: String!
-  branchId: String!
-  fileId: String!
-  sha: String
-}
-
-input PageDescriptor {
-  projectId: String!
-  branchId: String!
-  fileId: String!
-  pageId: String!
-  sha: String
-}
-
-input LayerDescriptor {
-  projectId: String!
-  branchId: String!
-  fileId: String!
-  layerId: String!
-  sha: String
-}
-
-input DisjointedObjectDescriptor {
+input ObjectDescriptor { # TODO https://github.com/facebook/graphql/issues/488
+  organizationId: String
   projectId: String!
   branchId: String!
   fileId: String
+  pageId: String
   layerId: String
   sha: String
+  collectionId: String
 }
 
 type OrganizationsEndpoint {
   list: [Organization]
 }
 
-type ProjectsEndpoint {
-  list: [Project]
-  info: Project
+enum ProjectStatus {
+  active
+  archived
 }
 
-type CollectionResponseAPI {
-  collections: [Collection]
-  files: [File]
-  pages: [Page]
-  layers: [Layer]
+input ProjectsOptions {
+  filter: ProjectStatus
+}
+
+type ProjectsEndpoint {
+  list(objectDescriptor: ObjectDescriptor, options: ProjectsOptions): [Project]
+  info(objectDescriptor: ObjectDescriptor): Project
 }
 
 type CollectionsEndpoint {
-  list(objectDescriptor: DisjointedObjectDescriptor): CollectionResponseAPI
-  info(objectDescriptor: CollectionDescriptor): CollectionResponseAPI
+  list(objectDescriptor: ObjectDescriptor): [Collection]
+  info(objectDescriptor: ObjectDescriptor): Collection
 }
 
 type CommentsEndpoint {
   create(
-    objectDescriptor: DisjointedObjectDescriptor
+    objectDescriptor: ObjectDescriptor
     input: CommentInput
   ): Comment
 }
 
 type CommitsEndpoint {
-  list(objectDescriptor: DisjointedObjectDescriptor): [Commit]
-  info(objectDescriptor: DisjointedObjectDescriptor): Commit
+  list(objectDescriptor: ObjectDescriptor): [Commit]
+  info(objectDescriptor: ObjectDescriptor): Commit
 }
 
-type BranchResponseAPI {
-  branches: [Branch]
-  users: [User]
+enum BranchFilter {
+  active
+  archived
+  mine
+}
+
+input BranchesOptions {
+  filter: BranchFilter
 }
 
 type BranchesEndpoint {
-  list(objectDescriptor: BranchDescriptor): BranchResponseAPI
-  info(objectDescriptor: BranchDescriptor): Branch
+  list(objectDescriptor: ObjectDescriptor, options: BranchesOptions): [Branch]
+  info(objectDescriptor: ObjectDescriptor): Branch
 }
 
 type ChangesetsEndpoint {
-  info(objectDescriptor: CommitDescriptor): Changeset
-}
-
-
-type FilesResponseAPI {
-  files: [File]
-  libraries: [Library]
+  info(objectDescriptor: ObjectDescriptor): Changeset
 }
 
 type FilesEndpoint {
-  list(objectDescriptor: BranchDescriptor): FilesResponseAPI
-  info(objectDescriptor: FileDescriptor): FilesResponseAPI
+  list(objectDescriptor: ObjectDescriptor): [File]
+  info(objectDescriptor: ObjectDescriptor): File
 }
 
 type PagesEndpoint {
-  list(objectDescriptor: FileDescriptor): [Page]
-  info(objectDescriptor: PageDescriptor): Page
-}
-
-type LayersResponseAPI {
-  layer: Layer
-  file: File
-  page: Page
-}
-
-type LayerResponseAPI {
-  layers: Layer
-  file: File
-  page: Page
+  list(objectDescriptor: ObjectDescriptor): [Page]
+  info(objectDescriptor: ObjectDescriptor): Page
 }
 
 type LayersEndpoint {
-  list(objectDescriptor: FileDescriptor): LayersResponseAPI
-  info(objectDescriptor: LayerDescriptor): LayerResponseAPI
+  list(objectDescriptor: ObjectDescriptor): [Layer]
+  info(objectDescriptor: ObjectDescriptor): Layer
 }
 
 type PreviewsEndpoint {
-  url(objectDescriptor: LayerDescriptor): String
-  blob(objectDescriptor: LayerDescriptor): String
+  info(objectDescriptor: ObjectDescriptor): String
+  raw(objectDescriptor: ObjectDescriptor): String
 }
 
 type DataEndpoint {
-  info(objectDescriptor: LayerDescriptor): LayerDataset
+  info(objectDescriptor: ObjectDescriptor): LayerDataset
 }
 
 type Query {
