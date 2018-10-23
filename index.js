@@ -62,13 +62,13 @@ const server = new ApolloServer({
   typeDefs: fs.readFileSync(path.resolve(__dirname, "schema.graphql"), "utf8"),
   resolvers: resolversForAbstractClient(),
   context: ({ req }) => {
-    const [_, abstractToken] = (req.headers.authorization || "").split(" ", 2);
+    const [_, accessToken] = (req.headers.authorization || "").split(" ", 2);
 
     return {
-      abstract: abstractToken
+      abstract: accessToken
         ? Abstract.Client({
             transport: Abstract.TRANSPORTS.API, // TODO: remove
-            abstractToken
+            accessToken
           })
         : undefined
     };
