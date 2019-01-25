@@ -16,6 +16,45 @@ type Organization {
   name: String!
 }
 
+type Activity {
+  id: ID!
+}
+
+type Notification {
+  id: ID!
+}
+
+type Share {
+  id: ID!
+  appUrl: String!
+}
+
+enum ShareLayerMode {
+  design
+  inspect
+}
+
+enum ShareKind {
+  collection
+  comment
+  project
+  branch
+  file
+  pahe
+  layer
+}
+
+input ShareInput {
+  kind: ShareKind
+  projectId: String!
+  branchId: String
+  fileId: String
+  pageId: String
+  layerId: String
+  sha: String
+  mode: ShareLayerMode
+}
+
 enum ProjectVisibility {
   organization
   project
@@ -74,6 +113,23 @@ type Collection {
   description: String
   createdAt: String!
   publishedAt: String
+}
+
+input CollectionCreateInput {
+  name: String!
+  branchId: String!
+  description: String
+  published: Boolean
+}
+
+input CollectionUpdateInput {
+  name: String
+  description: String
+  published: Boolean
+}
+
+type Asset {
+  id: ID!
 }
 
 enum CommitType {
@@ -196,17 +252,44 @@ type LayerDataset {
 
 input ObjectDescriptor { # TODO https://github.com/facebook/graphql/issues/488
   organizationId: String
-  projectId: String!
-  branchId: String!
+  collectionId: String
+  projectId: String
+  branchId: String
   fileId: String
   pageId: String
   layerId: String
   sha: String
-  collectionId: String
+}
+
+type UsersEndpoint {
+  list: [User]
+  info: User
 }
 
 type OrganizationsEndpoint {
   list: [Organization]
+  info: Organization
+}
+
+type SharesEndpoint {
+  info: Share
+}
+
+type SharesMutationEndpoint {
+  create(
+    objectDescriptor: ObjectDescriptor
+    input: ShareInput
+  ): Share
+}
+
+type ActivitiesEndpoint {
+  list: [Activity]
+  info: Activity
+}
+
+type NotificationsEndpoint {
+  list: [Notification]
+  info: Notification
 }
 
 enum ProjectStatus {
@@ -228,7 +311,29 @@ type CollectionsEndpoint {
   info(objectDescriptor: ObjectDescriptor): Collection
 }
 
+type CollectionsMutationEndpoint {
+  create(
+    objectDescriptor: ObjectDescriptor
+    input: CollectionCreateInput
+  ): Collection
+  update(
+    objectDescriptor: ObjectDescriptor
+    input: CollectionUpdateInput
+  ): Collection
+}
+
+type AssetsEndpoint {
+  list(objectDescriptor: ObjectDescriptor): [Asset]
+  info(objectDescriptor: ObjectDescriptor): Asset
+  raw(objectDescriptor: ObjectDescriptor): String
+}
+
 type CommentsEndpoint {
+  list(objectDescriptor: ObjectDescriptor): [Comment]
+  info(objectDescriptor: ObjectDescriptor): Comment
+}
+
+type CommentsMutationEndpoint {
   create(
     objectDescriptor: ObjectDescriptor
     input: CommentInput
@@ -274,8 +379,12 @@ type LayersEndpoint {
   info(objectDescriptor: ObjectDescriptor): Layer
 }
 
+type PreviewInfo {
+  webUrl: String!
+}
+
 type PreviewsEndpoint {
-  info(objectDescriptor: ObjectDescriptor): String
+  info(objectDescriptor: ObjectDescriptor): PreviewInfo
   raw(objectDescriptor: ObjectDescriptor): String
 }
 
@@ -284,9 +393,15 @@ type DataEndpoint {
 }
 
 type Query {
+  users: UsersEndpoint
   organizations: OrganizationsEndpoint
+  activities: ActivitiesEndpoint
+  notifications: NotificationsEndpoint
+  shares: SharesEndpoint
+  comments: CommentsEndpoint
   projects: ProjectsEndpoint
   collections: CollectionsEndpoint
+  assets: AssetsEndpoint
   commits: CommitsEndpoint
   branches: BranchesEndpoint
   changesets: ChangesetsEndpoint
@@ -298,5 +413,7 @@ type Query {
 }
 
 type Mutation {
-  comments: CommentsEndpoint
+  shares: SharesMutationEndpoint
+  comments: CommentsMutationEndpoint
+  collections: CollectionsMutationEndpoint
 }
